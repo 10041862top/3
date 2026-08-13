@@ -1,0 +1,11 @@
+# 版權聲明
+
+本站內容均從網上搜集，版權歸著作人及版權方所有，如侵犯您的權益，請通知我們，我們將會及時刪除！ 下載鏈接僅供寬帶測試研究用途，請下載後在24小時內刪除，請勿用於商業目的。請支持正版！
+
+# WEB開發
+
+| 書名 | 作者 | epub/mobi/azw3 |
+| --- | --- | --- |
+| JavaScript函數式編程 | Michael Fogus | [下載](https://url89.ctfile.com/f/31084289-1357048030-9c7b24?p=8866) |
+| Node即學即用 | Tom Hughes-Croucher/Mike Wilson | [下載](https://url89.ctfile.com/f/31084289-1357019341-c051bb?p=8866) |
+| PHP和MySQL Web開發（原書第4版） | Luke Welling | [下載](https://url89.ctfile.com/f/31084289-1357005859-aace71?p=8866) |

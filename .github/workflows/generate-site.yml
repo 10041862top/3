@@ -1,0 +1,81 @@
+name: Generate Index
+
+permissions:
+  contents: write
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "scripts/**"
+      - "md/**"
+  # 排除由同步脚本触发的提交（避免循环）
+  # 同步脚本使用 [skip ci] 标记，不会触发此工作流
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # 获取完整历史，避免推送冲突
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install dependencies
+        run: |
+          echo "No external dependencies required"
+
+      - name: Parse MD files to JSON
+        # 注意：all-books.json 通常已由同步脚本生成
+        # 这里确保all-books.json存在（如果不存在则生成）
+        run: |
+          if [ ! -f "docs/all-books.json" ]; then
+            echo "⚠️  all-books.json 不存在，生成中..."
+            python scripts/parse_md_to_json.py
+          else
+            echo "✅ all-books.json 已存在（可能由同步脚本生成），跳过生成"
+          fi
+
+      - name: Generate index.html
+        run: |
+          python scripts/generate_index.py
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs/index.html docs/books.json docs/all-books.json docs/parse-stats.json docs/search.js
+          git rm docs/index.md 2>/dev/null || true
+          git commit -m "auto: update index and search data" || echo "No changes"
+          
+          # 在推送前先拉取远程更改（避免推送冲突）
+          echo "📥 拉取远程最新更改..."
+          git fetch origin main
+          git pull origin main --rebase || git pull origin main --no-rebase || true
+          
+          # 推送更改（最多重试3次）
+          max_retries=3
+          retry_count=0
+          while [ $retry_count -lt $max_retries ]; do
+            if git push origin main; then
+              echo "✅ 推送成功"
+              break
+            else
+              retry_count=$((retry_count + 1))
+              echo "⚠️  推送失败，重试 $retry_count/$max_retries..."
+              if [ $retry_count -lt $max_retries ]; then
+                # 重新拉取并合并
+                git fetch origin main
+                git rebase origin/main || git merge origin/main || true
+                sleep 2
+              else
+                echo "❌ 推送失败，已达到最大重试次数"
+                exit 1
+              fi
+            fi
+          done
